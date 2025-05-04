@@ -1,0 +1,11 @@
+Model Information:
+* title:	BOSCH VE Pump
+* source:	https://sketchfab.com/3d-models/bosch-ve-pump-5908b80fb3dd46d3a0e40227c77f2c85
+* author:	VascoPires (https://sketchfab.com/vascopires)
+
+Model License:
+* license type:	CC-BY-NC-ND-4.0 (http://creativecommons.org/licenses/by-nc-nd/4.0/)
+* requirements:	Author must be credited. No commercial use. Modified versions can not be distributed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "BOSCH VE Pump" (https://sketchfab.com/3d-models/bosch-ve-pump-5908b80fb3dd46d3a0e40227c77f2c85) by VascoPires (https://sketchfab.com/vascopires) licensed under CC-BY-NC-ND-4.0 (http://creativecommons.org/licenses/by-nc-nd/4.0/)
