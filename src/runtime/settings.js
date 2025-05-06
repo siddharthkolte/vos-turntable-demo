@@ -2,7 +2,8 @@ import * as THREE from 'three'
 
 export const renderOptions = {
     PCSSShadow: true,
-    SSAAPass: true,
-    SSRPass: true,
+    SMAAPass: true,
+    SSAAPass: false,
+    SSRPass: false,
     GTAOPass: true
 }

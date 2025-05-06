@@ -1,6 +1,6 @@
 import './style.css'
 import * as THREE from 'three';
-import { GLTFLoader, OrbitControls, RGBELoader, EffectComposer, OutputPass, SSRPass, SSAARenderPass, GTAOPass, RenderPass } from 'three/examples/jsm/Addons.js';
+import { GLTFLoader, OrbitControls, RGBELoader, EffectComposer, OutputPass, SSRPass, SSAARenderPass, GTAOPass, RenderPass, SMAAPass } from 'three/examples/jsm/Addons.js';
 import { SetupPCSSShadow } from './core/pcssShadow.js';
 import { renderOptions } from './runtime/settings.js';
 
@@ -11,7 +11,7 @@ const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.inner
 
 const size = new THREE.Vector2(window.innerWidth, window.innerHeight);
 
-const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+const renderer = new THREE.WebGLRenderer({antialias: false, alpha: true});
 renderer.toneMapping = THREE.LinearToneMapping;
 renderer.toneMappingExposure = 0.768;
 renderer.setSize( size.width, size.height );
@@ -66,7 +66,12 @@ if (renderOptions.GTAOPass) {
   composer.addPass( gtaoPass );
 }
 
-if (renderOptions.SSAAPass || renderOptions.SSRPass || renderOptions.GTAOPass) composer.addPass(new OutputPass());
+if (renderOptions.SMAAPass) {
+  const smaaPass = new SMAAPass(scene, camera);
+  composer.addPass(smaaPass);
+}
+
+if (renderOptions.SMAAPass || renderOptions.SSAAPass || renderOptions.SSRPass || renderOptions.GTAOPass) composer.addPass(new OutputPass());
 else {
   composer.addPass(new RenderPass(scene, camera));
 }
