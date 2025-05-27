@@ -1,17 +1,18 @@
 import './style.css'
 import * as THREE from 'three';
-import { GLTFLoader, OrbitControls, RGBELoader, EffectComposer, OutputPass, SSRPass, SSAARenderPass, GTAOPass, RenderPass, SMAAPass } from 'three/examples/jsm/Addons.js';
+import { OrbitControls, GLTFLoader, RGBELoader, EffectComposer, OutputPass, SSRPass, GTAOPass, RenderPass, SMAAPass, TAARenderPass } from 'three/examples/jsm/Addons.js';
 import { SetupPCSSShadow } from './core/pcssShadow.js';
 import { renderOptions } from './runtime/settings.js';
 
 if (renderOptions.PCSSShadow) SetupPCSSShadow();
 
+const clock = new THREE.Clock();
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
 const size = new THREE.Vector2(window.innerWidth, window.innerHeight);
 
-const renderer = new THREE.WebGLRenderer({antialias: false, alpha: true});
+const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
 renderer.toneMapping = THREE.LinearToneMapping;
 renderer.toneMappingExposure = 0.768;
 renderer.setSize( size.width, size.height );
@@ -22,24 +23,13 @@ document.body.appendChild( renderer.domElement );
 
 const composer = new EffectComposer(renderer);
 
-if (renderOptions.SSAAPass) {
-  const ssaaPass = new SSAARenderPass(scene, camera);
-  ssaaPass.clearAlpha = true;
-  composer.addPass( ssaaPass );
-}
-
-if (renderOptions.SSRPass) {
-  const ssrPass = new SSRPass({renderer, scene, camera, width:size.width, height:size.height});
-  ssrPass.beautyRenderTarget.samples = 8;
-  ssrPass.maxDistance = 2.5;
-  ssrPass.blur = true;
-  ssrPass.fresnel = true;
-  composer.addPass(ssrPass);
-}
+const taaRenderPass = new TAARenderPass(scene, camera);
+taaRenderPass.unbiased = false;
+taaRenderPass.sampleLevel = 2;
+composer.addPass(taaRenderPass);
 
 if (renderOptions.GTAOPass) {
-  if (!renderOptions.SSAAPass || !renderOptions.SSRPass) composer.addPass(new RenderPass(scene, camera));
-
+   
   const gtaoPass = new GTAOPass( scene, camera, size.width, size.height );
   gtaoPass.output = GTAOPass.OUTPUT.Default;
   const aoParameters = {
@@ -66,15 +56,7 @@ if (renderOptions.GTAOPass) {
   composer.addPass( gtaoPass );
 }
 
-if (renderOptions.SMAAPass) {
-  const smaaPass = new SMAAPass(scene, camera);
-  composer.addPass(smaaPass);
-}
-
-if (renderOptions.SMAAPass || renderOptions.SSAAPass || renderOptions.SSRPass || renderOptions.GTAOPass) composer.addPass(new OutputPass());
-else {
-  composer.addPass(new RenderPass(scene, camera));
-}
+composer.addPass(new OutputPass());
 
 const hdriLoader = new RGBELoader();
 hdriLoader.load("/textures/hdri/city.hdr", (texData) => {
@@ -122,12 +104,59 @@ const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.maxDistance = 10;
 orbitControls.minDistance = 8;
 orbitControls.enablePan = false;
+orbitControls.keyRotateSpeed = 0;
 
-camera.position.set(-30,15,30);
+orbitControls.minPolarAngle = -Math.PI - (10 * THREE.MathUtils.DEG2RAD);
+orbitControls.maxPolarAngle = Math.PI - (10 * THREE.MathUtils.DEG2RAD);
+
+orbitControls.autoRotate = false;
+orbitControls.autoRotateSpeed = 0.0;
+
+const autoOrbitSpeed = -3.0;
+const autoOrbitTransitionIncrement = 0.01;
+const autoOrbitIdealPitch = Math.PI / 2 - (20 * THREE.MathUtils.DEG2RAD);
+const orbitWaitTime = 2.0;
+var orbitTimer = 0.0;
+
+camera.position.set(-6,4,6);
+camera.lookAt(0,0,0);
+
+orbitControls.saveState();
+var orbitActivate = false;
+
+window.addEventListener('mousedown', (event) => {
+  if (event.button == 0) orbitActivate = true;
+});
+
+window.addEventListener('mousemove', (event) => {
+  if (orbitActivate) {
+    orbitTimer = 0.0;
+    orbitControls.autoRotate = false;
+    orbitControls.autoRotateSpeed = 0.0;
+    
+    orbitControls.minPolarAngle = -Math.PI - (10 * THREE.MathUtils.DEG2RAD);
+    orbitControls.maxPolarAngle = Math.PI - (10 * THREE.MathUtils.DEG2RAD);
+  }
+});
+
+window.addEventListener('mouseup', (event) => {
+  orbitActivate = false;
+});
 
 function onUpdate() {
+  orbitTimer += clock.getDelta();
+
+  if (orbitTimer > orbitWaitTime) {
+    orbitControls.autoRotate = true;
+
+    if (Math.abs(orbitControls.autoRotateSpeed - autoOrbitSpeed) > 0.01) orbitControls.autoRotateSpeed = THREE.MathUtils.lerp(orbitControls.autoRotateSpeed, autoOrbitSpeed, autoOrbitTransitionIncrement);
+    else orbitControls.autoRotateSpeed = autoOrbitSpeed;
+
+    orbitControls.minPolarAngle = orbitControls.maxPolarAngle = orbitControls.getPolarAngle();
+    orbitControls.minPolarAngle = orbitControls.maxPolarAngle = THREE.MathUtils.lerp(orbitControls.minPolarAngle, autoOrbitIdealPitch, autoOrbitTransitionIncrement);
+    
+  }
 
   orbitControls.update();
   composer.render( scene, camera );
-
 }

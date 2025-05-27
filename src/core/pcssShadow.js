@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 const PCSS = `
     #define LIGHT_WORLD_SIZE 0.001
-    #define LIGHT_FRUSTUM_WIDTH 10.0
+    #define LIGHT_FRUSTUM_WIDTH 30.0
     #define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH)
     #define NEAR_PLANE 9.5
 
